@@ -9,6 +9,7 @@
 #include <android/native_window.h> // requires ndk r5 or newer
 #include <android/native_window_jni.h> // requires ndk r5 or newer
 #include <string>
+#include <android/asset_manager_jni.h>
 
 #include "logger.h"
 #include "renderer.h"
@@ -69,6 +70,11 @@ JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeS
     }
 
     return;
+}
+
+JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeSetAssetManager(JNIEnv* jenv, jobject obj, jobject assetManager)
+{
+    renderer->setAssetManger(AAssetManager_fromJava(jenv, assetManager));
 }
 
 JNIHelper JNIHelper::m_instance = JNIHelper();

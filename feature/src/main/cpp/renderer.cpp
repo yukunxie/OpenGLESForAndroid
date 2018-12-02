@@ -4,6 +4,9 @@
 
 #include "cxx_jni_interface.h"
 
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+
 #include "renderer.h"
 
 #include <stdint.h>
@@ -21,19 +24,6 @@
 #include "logger.h"
 
 #define LOG_TAG "EglSample"
-
-// 顶点着色器的脚本
-const char* verticesShader = "attribute vec2 vPosition;            \n"
-        "void main(){                         \n"
-        "   gl_Position = vec4(vPosition,0,1);\n"
-        "}";
-
-// 片元着色器的脚本
-const char* fragmentShader = "precision mediump float;         \n"
-        "uniform vec4 uColor;             \n"
-        "void main(){                     \n"
-        "   gl_FragColor = uColor;        \n"
-        "}";
 
 static GLint sProgram = 0;
 
@@ -61,104 +51,118 @@ GLuint loadShader(GLenum shaderType,const char* sourceCode) {
     }
     return shader;
 }
-
-GLint createProgram()
-{
-    //const char * filename = "/storage/emulated/0/APKs/shader.bin";
-    std::string filename = getDocumentPath() + "/shader.bin";
-
-
+//
+//GLint createProgram()
+//{
+//    //const char * filename = "/storage/emulated/0/APKs/shader.bin";
+//    std::string filename = getDocumentPath() + "/shader.bin";
+//
+////    AAssetDir* assetDir = AAssetManager_openDir(mgr, "");
+////    const char* _filename = (const char*)NULL;
+////    while ((_filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
+////        AAsset* asset = AAssetManager_open(mgr, filename, AASSET_MODE_STREAMING);
+////        char buf[BUFSIZ];
+////        int nb_read = 0;
+////        FILE* out = fopen(filename, "w");
+////        while ((nb_read = AAsset_read(asset, buf, BUFSIZ)) > 0)
+////            fwrite(buf, nb_read, 1, out);
+////        fclose(out);
+////        AAsset_close(asset);
+////    }
+////    AAssetDir_close(assetDir);
+//
+//
+////    {
+////        GLint   binaryLength;
+////        void*   binary;
+////        GLint   success;
+////        FILE*   infile;
+////        GLenum binaryFormat;
+////
+////
+////        //
+////        //  Read the program binary
+////        //
+////        infile = fopen(filename.c_str(), "rb");
+////        if (infile) {
+////            fseek(infile, 0, SEEK_END);
+////            binaryLength = (GLint) ftell(infile) - sizeof(binaryFormat);
+////            binary = (void *) malloc(binaryLength + 1);
+////            fseek(infile, 0, SEEK_SET);
+////            fread(&binaryFormat, sizeof(binaryFormat), 1, infile);
+////            fread(binary, binaryLength, 1, infile);
+////            fclose(infile);
+////
+////            GLuint progObj = glCreateProgram();
+////
+////            //
+////            //  Load the binary into the program object -- no need to link!
+////            //
+////            glProgramBinaryOES(progObj, binaryFormat, binary, binaryLength);
+////            free(binary);
+////
+////            glGetProgramiv(progObj, GL_LINK_STATUS, &success);
+////
+////            if (GL_TRUE == success)
+////            {
+////                return progObj;
+////            }
+////        }
+////
+////    }
+//
+//    GLuint program = glCreateProgram();
+//    GLuint _v = loadShader(GL_VERTEX_SHADER, verticesShader);
+//    GLuint _f = loadShader(GL_FRAGMENT_SHADER, fragmentShader);
+//    GLint linked;
+//
+//    glAttachShader(program, _v);
+//    glAttachShader(program, _f);
+//
+//    glLinkProgram(program);
+//
+//    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+//    if(!linked)
 //    {
-//        GLint   binaryLength;
-//        void*   binary;
-//        GLint   success;
-//        FILE*   infile;
-//        GLenum binaryFormat;
-//
-//
-//        //
-//        //  Read the program binary
-//        //
-//        infile = fopen(filename.c_str(), "rb");
-//        if (infile) {
-//            fseek(infile, 0, SEEK_END);
-//            binaryLength = (GLint) ftell(infile) - sizeof(binaryFormat);
-//            binary = (void *) malloc(binaryLength + 1);
-//            fseek(infile, 0, SEEK_SET);
-//            fread(&binaryFormat, sizeof(binaryFormat), 1, infile);
-//            fread(binary, binaryLength, 1, infile);
-//            fclose(infile);
-//
-//            GLuint progObj = glCreateProgram();
-//
-//            //
-//            //  Load the binary into the program object -- no need to link!
-//            //
-//            glProgramBinaryOES(progObj, binaryFormat, binary, binaryLength);
-//            free(binary);
-//
-//            glGetProgramiv(progObj, GL_LINK_STATUS, &success);
-//
-//            if (GL_TRUE == success)
-//            {
-//                return progObj;
-//            }
+//        GLint infoLen = 0;
+//        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen);
+//        if(infoLen > 1) {
+//            char *infoLog = (char *) malloc(sizeof(char) * infoLen);
+//            glGetProgramInfoLog(program, infoLen, NULL, infoLog);
+//            LOG_ERROR("create program fail. %s", infoLog);
+//            free(infoLog);
 //        }
-//
+//        glDeleteProgram(program);
+//        return 0;
 //    }
-
-    GLuint program = glCreateProgram();
-    GLuint _v = loadShader(GL_VERTEX_SHADER, verticesShader);
-    GLuint _f = loadShader(GL_FRAGMENT_SHADER, fragmentShader);
-    GLint linked;
-
-    glAttachShader(program, _v);
-    glAttachShader(program, _f);
-
-    glLinkProgram(program);
-
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if(!linked)
-    {
-        GLint infoLen = 0;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen);
-        if(infoLen > 1) {
-            char *infoLog = (char *) malloc(sizeof(char) * infoLen);
-            glGetProgramInfoLog(program, infoLen, NULL, infoLog);
-            LOG_ERROR("create program fail. %s", infoLog);
-            free(infoLog);
-        }
-        glDeleteProgram(program);
-        return 0;
-    }
-
-//    if (linked)
-//    {
-//        GLuint   binaryLength;
-//        void*   binary;
-//        FILE*   outfile;
-//        GLenum binaryFormat;
 //
-//        //
-//        //  Retrieve the binary from the program object
-//        //
-//        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH_OES, (GLint*)&binaryLength);
-//        binary = (void*)malloc(binaryLength);
-//        glGetProgramBinaryOES(program, (GLsizei)binaryLength, NULL, &binaryFormat, binary);
-//
-//        //
-//        //  Cache the program binary for future runs
-//        //
-//        outfile = fopen(filename.c_str(), "wb");
-//        if (outfile) {
-//            fwrite(&binaryFormat, sizeof(binaryFormat), 1, outfile);
-//            fwrite(binary, binaryLength, 1, outfile);
-//            fclose(outfile);
-//            free(binary);
-//        }
-//    }
-    return program;
-}
+////    if (linked)
+////    {
+////        GLuint   binaryLength;
+////        void*   binary;
+////        FILE*   outfile;
+////        GLenum binaryFormat;
+////
+////        //
+////        //  Retrieve the binary from the program object
+////        //
+////        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH_OES, (GLint*)&binaryLength);
+////        binary = (void*)malloc(binaryLength);
+////        glGetProgramBinaryOES(program, (GLsizei)binaryLength, NULL, &binaryFormat, binary);
+////
+////        //
+////        //  Cache the program binary for future runs
+////        //
+////        outfile = fopen(filename.c_str(), "wb");
+////        if (outfile) {
+////            fwrite(&binaryFormat, sizeof(binaryFormat), 1, outfile);
+////            fwrite(binary, binaryLength, 1, outfile);
+////            fclose(outfile);
+////            free(binary);
+////        }
+////    }
+//    return program;
+//}
 
 static float tvertices[] = { 0.0f, 0.5f, -0.5f, -0.5f,0.5f,  -0.5f };
 
@@ -242,10 +246,66 @@ void Renderer::setWindow(ANativeWindow *window)
     return;
 }
 
+void Renderer::getAssetContent(const std::string& filename, std::string& content)
+{
+    getAssetContent(filename.c_str(), content);
+}
 
+void Renderer::getAssetContent(const char* filename, std::string& content)
+{
+    AAsset* asset = AAssetManager_open(_assetManager, filename, AASSET_MODE_BUFFER);
+    if (asset){
+        content.clear();
+        size_t length = AAsset_getLength(asset);
+        content.resize(length, '\0');
+        AAsset_read(asset, &content[0], BUFSIZ);
+        AAsset_close(asset);
+    }
+    else {
+        content.clear();
+        LOG_ERROR("getAssetContent filename=%s doesn't exist.");
+    }
+}
+
+GLuint Renderer::createProgramFromFiles(const std::string& vsFilename, const std::string& fsFilename)
+{
+    std::string vsSourceCode;
+    std::string fsSourceCode;
+
+    this->getAssetContent(vsFilename, vsSourceCode);
+    this->getAssetContent(fsFilename, fsSourceCode);
+
+    GLuint program = glCreateProgram();
+    GLuint _v = loadShader(GL_VERTEX_SHADER, vsSourceCode.c_str());
+    GLuint _f = loadShader(GL_FRAGMENT_SHADER, fsSourceCode.c_str());
+
+    glAttachShader(program, _v);
+    glAttachShader(program, _f);
+
+    glLinkProgram(program);
+    GLint linked;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+
+    if(!linked)
+    {
+        GLint infoLen = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen);
+        if(infoLen > 1) {
+            std::string infoLog(std::max(infoLen, 1), '\0');
+            glGetProgramInfoLog(program, infoLen, NULL, &infoLog[0]);
+            LOG_ERROR("create program fail. %s", infoLog.c_str());
+        }
+        glDeleteProgram(program);
+        return 0;
+    }
+    return program;
+}
 
 void Renderer::renderLoop()
 {
+    std::string shader;
+    getAssetContent("shaders/shader_1.vs", shader);
+
     bool renderingEnabled = true;
 
     LOG_INFO("renderLoop()");
@@ -361,19 +421,7 @@ bool Renderer::initialize()
     _surface = surface;
     _context = context;
 
-//    glDisable(GL_DITHER);
-//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-//    glClearColor(0, 0, 0, 0);
-//    glEnable(GL_CULL_FACE);
-//    glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
-
     glViewport(0, 0, width, height);
-
-    ratio = (GLfloat) width / height;
-//    glMatrixMode(GL_PROJECTION);
-//    glLoadIdentity();
-//    glFrustumf(-ratio, ratio, -1, 1, 1, 10);
 
     return true;
 }
@@ -397,7 +445,7 @@ void Renderer::drawFrame()
 {
     if (sProgram == 0)
     {
-        sProgram = createProgram();
+        sProgram = createProgramFromFiles("shaders/test.vs", "shaders/test.fs");
     }
 
     // 设置clear color颜色RGBA(这里仅仅是设置清屏时GLES20.glClear()用的颜色值而不是执行清屏)

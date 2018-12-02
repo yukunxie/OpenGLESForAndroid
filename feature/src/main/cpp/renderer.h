@@ -22,6 +22,15 @@ public:
     void stop();
     void setWindow(ANativeWindow* window);
 
+    void setAssetManger(AAssetManager* mgr){
+        _assetManager = mgr;
+    }
+
+    void getAssetContent(const std::string& filename, std::string& content);
+    void getAssetContent(const char* filename, std::string& content);
+
+    GLuint createProgramFromFiles(const std::string& vsFilename, const std::string& fsFilename);
+
 
 private:
 
@@ -37,6 +46,7 @@ private:
 
     // android window, supported by NDK r5 and newer
     ANativeWindow* _window;
+    AAssetManager* _assetManager = nullptr;
 
     EGLDisplay _display;
     EGLSurface _surface;

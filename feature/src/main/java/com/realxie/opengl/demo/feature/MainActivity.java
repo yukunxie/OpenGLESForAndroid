@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -156,6 +157,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         super.onStart();
         Log.i(TAG, "onStart()");
         nativeOnStart();
+        nativeSetAssetManager(getAssets());
     }
 
     @Override
@@ -196,6 +198,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     public static native void nativeOnPause();
     public static native void nativeOnStop();
     public static native void nativeSetSurface(Surface surface);
+    public static native void nativeSetAssetManager(AssetManager assetManager);
 
 //    static {
 //        System.loadLibrary("nativeegl");

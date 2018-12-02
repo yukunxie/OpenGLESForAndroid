@@ -24,6 +24,7 @@ JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeO
 JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeOnPause(JNIEnv* jenv, jobject obj);
 JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeOnStop(JNIEnv* jenv, jobject obj);
 JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeSetSurface(JNIEnv* jenv, jobject obj, jobject surface);
+JNIEXPORT void JNICALL Java_com_realxie_opengl_demo_feature_MainActivity_nativeSetAssetManager(JNIEnv* jenv, jobject obj, jobject assetManager);
 };
 
 
