@@ -11,12 +11,12 @@
 #include <pthread.h>
 #include <android/native_window.h> // requires ndk r5 or newer
 #include <EGL/egl.h> // requires ndk r5 or newer
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include <malloc.h>
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES 1
 #endif
-#include <GLES2/gl2ext.h>
+#include <GLES3/gl3ext.h>
 
 #include "logger.h"
 
@@ -68,44 +68,44 @@ GLint createProgram()
     std::string filename = getDocumentPath() + "/shader.bin";
 
 
-    {
-        GLint   binaryLength;
-        void*   binary;
-        GLint   success;
-        FILE*   infile;
-        GLenum binaryFormat;
-
-
-        //
-        //  Read the program binary
-        //
-        infile = fopen(filename.c_str(), "rb");
-        if (infile) {
-            fseek(infile, 0, SEEK_END);
-            binaryLength = (GLint) ftell(infile) - sizeof(binaryFormat);
-            binary = (void *) malloc(binaryLength + 1);
-            fseek(infile, 0, SEEK_SET);
-            fread(&binaryFormat, sizeof(binaryFormat), 1, infile);
-            fread(binary, binaryLength, 1, infile);
-            fclose(infile);
-
-            GLuint progObj = glCreateProgram();
-
-            //
-            //  Load the binary into the program object -- no need to link!
-            //
-            glProgramBinaryOES(progObj, binaryFormat, binary, binaryLength);
-            free(binary);
-
-            glGetProgramiv(progObj, GL_LINK_STATUS, &success);
-
-            if (GL_TRUE == success)
-            {
-                return progObj;
-            }
-        }
-
-    }
+//    {
+//        GLint   binaryLength;
+//        void*   binary;
+//        GLint   success;
+//        FILE*   infile;
+//        GLenum binaryFormat;
+//
+//
+//        //
+//        //  Read the program binary
+//        //
+//        infile = fopen(filename.c_str(), "rb");
+//        if (infile) {
+//            fseek(infile, 0, SEEK_END);
+//            binaryLength = (GLint) ftell(infile) - sizeof(binaryFormat);
+//            binary = (void *) malloc(binaryLength + 1);
+//            fseek(infile, 0, SEEK_SET);
+//            fread(&binaryFormat, sizeof(binaryFormat), 1, infile);
+//            fread(binary, binaryLength, 1, infile);
+//            fclose(infile);
+//
+//            GLuint progObj = glCreateProgram();
+//
+//            //
+//            //  Load the binary into the program object -- no need to link!
+//            //
+//            glProgramBinaryOES(progObj, binaryFormat, binary, binaryLength);
+//            free(binary);
+//
+//            glGetProgramiv(progObj, GL_LINK_STATUS, &success);
+//
+//            if (GL_TRUE == success)
+//            {
+//                return progObj;
+//            }
+//        }
+//
+//    }
 
     GLuint program = glCreateProgram();
     GLuint _v = loadShader(GL_VERTEX_SHADER, verticesShader);
@@ -132,31 +132,31 @@ GLint createProgram()
         return 0;
     }
 
-    if (linked)
-    {
-        GLuint   binaryLength;
-        void*   binary;
-        FILE*   outfile;
-        GLenum binaryFormat;
-
-        //
-        //  Retrieve the binary from the program object
-        //
-        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH_OES, (GLint*)&binaryLength);
-        binary = (void*)malloc(binaryLength);
-        glGetProgramBinaryOES(program, (GLsizei)binaryLength, NULL, &binaryFormat, binary);
-
-        //
-        //  Cache the program binary for future runs
-        //
-        outfile = fopen(filename.c_str(), "wb");
-        if (outfile) {
-            fwrite(&binaryFormat, sizeof(binaryFormat), 1, outfile);
-            fwrite(binary, binaryLength, 1, outfile);
-            fclose(outfile);
-            free(binary);
-        }
-    }
+//    if (linked)
+//    {
+//        GLuint   binaryLength;
+//        void*   binary;
+//        FILE*   outfile;
+//        GLenum binaryFormat;
+//
+//        //
+//        //  Retrieve the binary from the program object
+//        //
+//        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH_OES, (GLint*)&binaryLength);
+//        binary = (void*)malloc(binaryLength);
+//        glGetProgramBinaryOES(program, (GLsizei)binaryLength, NULL, &binaryFormat, binary);
+//
+//        //
+//        //  Cache the program binary for future runs
+//        //
+//        outfile = fopen(filename.c_str(), "wb");
+//        if (outfile) {
+//            fwrite(&binaryFormat, sizeof(binaryFormat), 1, outfile);
+//            fwrite(binary, binaryLength, 1, outfile);
+//            fclose(outfile);
+//            free(binary);
+//        }
+//    }
     return program;
 }
 
