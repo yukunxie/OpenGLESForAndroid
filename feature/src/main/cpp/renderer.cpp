@@ -6,6 +6,11 @@
 
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include "glm/mat4x4.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "renderer.h"
 
@@ -25,7 +30,13 @@
 
 #define LOG_TAG "EglSample"
 
-static GLint sProgram = 0;
+static GLuint sProgram = 0;
+static GLuint sVertexArrayObject = 0;
+static GLuint sVertexBuffer = 0;
+static GLuint sIndiceBuffer = 0;
+
+static glm::mat4 pMatrix ;
+static glm::mat4 mvMatrix;
 
 GLuint loadShader(GLenum shaderType,const char* sourceCode) {
     GLuint shader; GLint compiled;
@@ -164,38 +175,73 @@ GLuint loadShader(GLenum shaderType,const char* sourceCode) {
 //    return program;
 //}
 
-static float tvertices[] = { 0.0f, 0.5f, -0.5f, -0.5f,0.5f,  -0.5f };
+GLfloat positions[] = {
+        // Front face
+        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
 
-static GLint vertices[][3] = {
-        { -0x10000, -0x10000, -0x10000 },
-        {  0x10000, -0x10000, -0x10000 },
-        {  0x10000,  0x10000, -0x10000 },
-        { -0x10000,  0x10000, -0x10000 },
-        { -0x10000, -0x10000,  0x10000 },
-        {  0x10000, -0x10000,  0x10000 },
-        {  0x10000,  0x10000,  0x10000 },
-        { -0x10000,  0x10000,  0x10000 }
-};
+        // Back face
+        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
 
-static GLint colors[][4] = {
-        { 0x00000, 0x00000, 0x00000, 0x10000 },
-        { 0x10000, 0x00000, 0x00000, 0x10000 },
-        { 0x10000, 0x10000, 0x00000, 0x10000 },
-        { 0x00000, 0x10000, 0x00000, 0x10000 },
-        { 0x00000, 0x00000, 0x10000, 0x10000 },
-        { 0x10000, 0x00000, 0x10000, 0x10000 },
-        { 0x10000, 0x10000, 0x10000, 0x10000 },
-        { 0x00000, 0x10000, 0x10000, 0x10000 }
-};
+        // Top face
+        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
 
-GLubyte indices[] = {
-        0, 4, 5,    0, 5, 1,
-        1, 5, 6,    1, 6, 2,
-        2, 6, 7,    2, 7, 3,
-        3, 7, 4,    3, 4, 0,
-        4, 7, 6,    4, 6, 5,
-        3, 0, 1,    3, 1, 2
-};
+        // Bottom face
+        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+
+        // Right face
+        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+
+        // Left face
+        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0
+    };
+
+GLushort cubeVertexIndices[] = {
+        // front
+        0, 1, 2, 0, 2, 3,
+        // back
+        4, 5, 6, 4, 6, 7,
+        // top
+        8, 9, 10, 8, 10, 11,
+        // bottom
+        12, 13, 14, 12, 14, 15,
+        // right
+        16, 17, 18, 16, 18, 19,
+        // left
+        20, 21, 22, 20, 22, 23
+    };
+
+//static float tvertices[] = { 0.0f, 0.5f, -0.5f, -0.5f,0.5f,  -0.5f };
+//
+//static GLint vertices[][3] = {
+//        { -0x10000, -0x10000, -0x10000 },
+//        {  0x10000, -0x10000, -0x10000 },
+//        {  0x10000,  0x10000, -0x10000 },
+//        { -0x10000,  0x10000, -0x10000 },
+//        { -0x10000, -0x10000,  0x10000 },
+//        {  0x10000, -0x10000,  0x10000 },
+//        {  0x10000,  0x10000,  0x10000 },
+//        { -0x10000,  0x10000,  0x10000 }
+//};
+//
+//static GLint colors[][4] = {
+//        { 0x00000, 0x00000, 0x00000, 0x10000 },
+//        { 0x10000, 0x00000, 0x00000, 0x10000 },
+//        { 0x10000, 0x10000, 0x00000, 0x10000 },
+//        { 0x00000, 0x10000, 0x00000, 0x10000 },
+//        { 0x00000, 0x00000, 0x10000, 0x10000 },
+//        { 0x10000, 0x00000, 0x10000, 0x10000 },
+//        { 0x10000, 0x10000, 0x10000, 0x10000 },
+//        { 0x00000, 0x10000, 0x10000, 0x10000 }
+//};
+//
+//GLubyte indices[] = {
+//        0, 4, 5,    0, 5, 1,
+//        1, 5, 6,    1, 6, 2,
+//        2, 6, 7,    2, 7, 3,
+//        3, 7, 4,    3, 4, 0,
+//        4, 7, 6,    4, 6, 5,
+//        3, 0, 1,    3, 1, 2
+//};
 
 
 Renderer::Renderer()
@@ -263,7 +309,7 @@ void Renderer::getAssetContent(const char* filename, std::string& content)
     }
     else {
         content.clear();
-        LOG_ERROR("getAssetContent filename=%s doesn't exist.");
+        LOG_ERROR("getAssetContent filename=%s doesn't exist.", filename);
     }
 }
 
@@ -445,27 +491,92 @@ void Renderer::drawFrame()
 {
     if (sProgram == 0)
     {
-        sProgram = createProgramFromFiles("shaders/test.vs", "shaders/test.fs");
+        sProgram = createProgramFromFiles("shaders/shader_1.vs", "shaders/shader_1.fs");
+        glGenVertexArrays(1, &sVertexArrayObject);
+        GL_CHECK_ERROR();
+
+        GLuint buffers[] = {sVertexBuffer, sIndiceBuffer};
+        glGenBuffers(sizeof(buffers)/sizeof(GLuint), buffers);
+        GL_CHECK_ERROR();
+
+        sVertexBuffer = buffers[0];
+        glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer);
+        GL_CHECK_ERROR();
+        glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+        GL_CHECK_ERROR();
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK_ERROR();
+
+        sIndiceBuffer = buffers[1];
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndiceBuffer);
+        GL_CHECK_ERROR();
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeVertexIndices), cubeVertexIndices, GL_STATIC_DRAW);
+        GL_CHECK_ERROR();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL_CHECK_ERROR();
+
+        glBindVertexArray(sVertexArrayObject);
+        GL_CHECK_ERROR();
+
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer);
+        GL_CHECK_ERROR();
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+        GL_CHECK_ERROR();
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK_ERROR();
+
+        glBindVertexArray(0);
+        GL_CHECK_ERROR();
+
+        pMatrix = glm::perspective(0.785f, 1.0f, 1.0f, 1000.0f);
+        mvMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
     }
 
-    // 设置clear color颜色RGBA(这里仅仅是设置清屏时GLES20.glClear()用的颜色值而不是执行清屏)
-    glClearColor(1.0f, 0, 0, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    // 使用某套shader程序
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    // 使用shader程序
     glUseProgram(sProgram);
+    GL_CHECK_ERROR();
 
-    GLint m_vPosition = glGetAttribLocation(sProgram, "vPosition");
-    GLint m_uColor = glGetUniformLocation(sProgram, "uColor");
+    auto uniMatMV = glGetUniformLocation(sProgram, "mvMatrix");
+    auto uniMatP = glGetUniformLocation(sProgram, "pMatrix");
 
-    // 为画笔指定顶点位置数据(vPosition)
-    glVertexAttribPointer(m_vPosition, 2, GL_FLOAT, false, 0, tvertices);
-    // 允许顶点位置数据数组
-    glEnableVertexAttribArray(m_vPosition);
-    // 设置属性uColor(颜色 索引,R,G,B,A)
-    glUniform4f(m_uColor, 0.0f, 1.0f, 0.0f, 1.0f);
+    static float orientation[] = {0.0020, 0.0010, 0.0005};
+    mvMatrix = glm::rotate(mvMatrix, orientation[0], glm::vec3(1.0f, 0.0f, 0.0f));
+    mvMatrix = glm::rotate(mvMatrix, orientation[1], glm::vec3(0.0f, 1.0f, 0.0f));
+    mvMatrix = glm::rotate(mvMatrix, orientation[2], glm::vec3(0.0f, 0.0f, 1.0f));
+
+    glUniformMatrix4fv(uniMatMV, 1, false, glm::value_ptr(mvMatrix));
+    GL_CHECK_ERROR();
+    glUniformMatrix4fv(uniMatP, 1, false, glm::value_ptr(pMatrix));
+    GL_CHECK_ERROR();
+
+//    GLint m_vPosition = glGetAttribLocation(sProgram, "vPosition");
+//    GLint m_uColor = glGetUniformLocation(sProgram, "uColor");
+//
+//    // 为画笔指定顶点位置数据(vPosition)
+//    glVertexAttribPointer(m_vPosition, 2, GL_FLOAT, false, 0, tvertices);
+//    // 允许顶点位置数据数组
+//    glEnableVertexAttribArray(m_vPosition);
+//    // 设置属性uColor(颜色 索引,R,G,B,A)
+//    glUniform4f(m_uColor, 0.0f, 1.0f, 0.0f, 1.0f);
+
+    glBindVertexArray(sVertexArrayObject);
+    GL_CHECK_ERROR();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndiceBuffer);
+    GL_CHECK_ERROR();
+
     // 绘制
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, nullptr);
+    GL_CHECK_ERROR();
+
+    glBindVertexArray(0);
 
     _angle += 1.2f;
 }

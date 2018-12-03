@@ -9,6 +9,14 @@
 #include <EGL/egl.h> // requires ndk r5 or newer
 #include <GLES/gl.h>
 
+#define GL_CHECK_ERROR() \
+do { \
+    GLint code = glGetError(); \
+    if(GL_NO_ERROR != code){   \
+        LOG_ERROR("GL ERROR:%X %s %d %s", code, __FILE__, __LINE__, __FUNCTION__);\
+    }      \
+}while(false)
+
 
 class Renderer {
 
